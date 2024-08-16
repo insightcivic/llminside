@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item List</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+</head>
+<body>
+    <h1>Item List</h1>
+    <ul>
+        {% for item in items %}
+            <li><a href="/items/{{ item.id }}">{{ item.name }}</a></li>
+        {% endfor %}
+    </ul>
+    <h2>Add New Item</h2>
+    <form action="/items/" method="post">
+        <input type="text" name="name" required>
+        <button type="submit">Add Item</button>
+    </form>
+</body>
+</html>
