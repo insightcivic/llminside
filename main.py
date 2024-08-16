@@ -1,6 +1,8 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request, Form, HTTPException
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
@@ -28,6 +30,12 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+# Set up Jinja2 templates
+templates = Jinja2Templates(directory="templates")
+
+# Mount static files directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # Dependency to get the database session
 def get_db():
     db = SessionLocal()
@@ -37,20 +45,22 @@ def get_db():
         db.close()
 
 @app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@app.get("/items/{item_id}")
-async def read_item(item_id: int, db: Session = Depends(get_db)):
-    item = db.query(Item).filter(Item.id == item_id).first()
-    if item is None:
-        return {"error": "Item not found"}
-    return {"id": item.id, "name": item.name}
+async def root(request: Request, db: Session = Depends(get_db)):
+    items = db.query(Item).all()
+    return templates.TemplateResponse("index.html", {"request": request, "items": items})
 
 @app.post("/items/")
-async def create_item(name: str, db: Session = Depends(get_db)):
+async def create_item(request: Request, name: str = Form(...), db: Session = Depends(get_db)):
     new_item = Item(name=name)
     db.add(new_item)
     db.commit()
     db.refresh(new_item)
-    return {"id": new_item.id, "name": new_item.name}
+    items = db.query(Item).all()
+    return templates.TemplateResponse("index.html", {"request": request, "items": items})
+
+@app.get("/items/{item_id}")
+async def read_item(request: Request, item_id: int, db: Session = Depends(get_db)):
+    item = db.query(Item).filter(Item.id == item_id).first()
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return templates.TemplateResponse("item_detail.html", {"request": request, "item": item})
