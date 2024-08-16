@@ -1,0 +1,17 @@
+name: myproject
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - fastapi
+  - uvicorn
+  - sqlalchemy
+  - psycopg2
+  - langchain
+  - openai
+  - nodejs
+  - npm
+  - pip
+  - pip:
+    - pgvector
