@@ -49,9 +49,10 @@ class Item(Base):
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+ 
+# enforce HTTPS - causing redirect loop on Railway
+# app.add_middleware(HTTPSRedirectMiddleware)
 
-# enforce HTTPS
-app.add_middleware(HTTPSRedirectMiddleware)
 
 # Set up Jinja2 templates
 templates = Jinja2Templates(directory="templates")
