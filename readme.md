@@ -2,3 +2,8 @@
 
 ## Stack
 
+- FastAPI
+- Jinja
+- PostgreSQL
+
+
