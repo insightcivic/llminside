@@ -9,8 +9,22 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
 
-# Load environment variables
+# Load environment variables from .env file (will be ignored if file doesn't exist)
 load_dotenv()
+
+
+#### CODE TO DIFFERENTIATE PROD VS. LOCAL DATABASE SETTINGS
+# Get the DATABASE_URL from environment variables
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
+
+# If the URL starts with postgres://, replace it with postgresql://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+#### NEW CODE ENDS
+
+
+
+
 
 # Database connection
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")

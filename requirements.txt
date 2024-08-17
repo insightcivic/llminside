@@ -8,4 +8,6 @@ jinja2
 python-dotenv
 psycopg2-binary
 pgvector
+python-multipart
+
 
