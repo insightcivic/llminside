@@ -26,6 +26,9 @@ class Item(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
 
+    def __repr__(self):
+        return f"<Item(id={self.id}, name='{self.name}')>"
+
 # Create the database tables
 Base.metadata.create_all(bind=engine)
 
@@ -47,29 +50,45 @@ def get_db():
 
 @app.get("/")
 async def root(request: Request, db: Session = Depends(get_db)):
-    items = db.query(Item).all()
-    print(f"Items retrieved: {items}")  # Debug print
-    return templates.TemplateResponse("index.html", {"request": request, "items": items})
+    try:
+        items = db.query(Item).all()
+        print(f"Items retrieved: {items}")  # Debug print
+        return templates.TemplateResponse("index.html", {"request": request, "items": items})
+    except Exception as e:
+        print(f"Error in root: {str(e)}")
+        return templates.TemplateResponse("error.html", {"request": request, "error": str(e)})
 
 @app.post("/items/")
 async def create_item(request: Request, name: str = Form(...), db: Session = Depends(get_db)):
-    new_item = Item(name=name)
-    db.add(new_item)
-    db.commit()
-    db.refresh(new_item)
-    items = db.query(Item).all()
-    return templates.TemplateResponse("index.html", {"request": request, "items": items})
+    try:
+        new_item = Item(name=name)
+        db.add(new_item)
+        db.commit()
+        db.refresh(new_item)
+        print(f"New item created: {new_item}")  # Debug print
+        items = db.query(Item).all()
+        return templates.TemplateResponse("index.html", {"request": request, "items": items})
+    except Exception as e:
+        print(f"Error in create_item: {str(e)}")
+        return templates.TemplateResponse("error.html", {"request": request, "error": str(e)})
 
 @app.get("/items/{item_id}")
 async def read_item(request: Request, item_id: int, db: Session = Depends(get_db)):
     try:
         item = db.query(Item).filter(Item.id == item_id).first()
+        print(f"Retrieved item: {item}")  # Debug print
         if item is None:
+            print(f"Item not found: id={item_id}")  # Debug print
             return templates.TemplateResponse("error.html", {"request": request, "error": "Item not found"}, status_code=404)
+        print(f"Rendering item_detail.html for item: {item}")  # Debug print
         return templates.TemplateResponse("item_detail.html", {"request": request, "item": item})
     except SQLAlchemyError as e:
-        print(f"Database error: {str(e)}")
+        print(f"Database error in read_item: {str(e)}")
         return templates.TemplateResponse("error.html", {"request": request, "error": "Database error occurred"}, status_code=500)
     except Exception as e:
-        print(f"Unexpected error: {str(e)}")
+        print(f"Unexpected error in read_item: {str(e)}")
         return templates.TemplateResponse("error.html", {"request": request, "error": "An unexpected error occurred"}, status_code=500)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
