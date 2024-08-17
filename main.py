@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, Request, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
@@ -66,8 +67,7 @@ async def create_item(request: Request, name: str = Form(...), db: Session = Dep
         db.commit()
         db.refresh(new_item)
         print(f"New item created: {new_item}")  # Debug print
-        items = db.query(Item).all()
-        return templates.TemplateResponse("index.html", {"request": request, "items": items})
+        return RedirectResponse(url="/", status_code=303)
     except Exception as e:
         print(f"Error in create_item: {str(e)}")
         return templates.TemplateResponse("error.html", {"request": request, "error": str(e)})
@@ -87,6 +87,23 @@ async def read_item(request: Request, item_id: int, db: Session = Depends(get_db
         return templates.TemplateResponse("error.html", {"request": request, "error": "Database error occurred"}, status_code=500)
     except Exception as e:
         print(f"Unexpected error in read_item: {str(e)}")
+        return templates.TemplateResponse("error.html", {"request": request, "error": "An unexpected error occurred"}, status_code=500)
+
+@app.post("/items/{item_id}/delete")
+async def delete_item(request: Request, item_id: int, db: Session = Depends(get_db)):
+    try:
+        item = db.query(Item).filter(Item.id == item_id).first()
+        if item is None:
+            return templates.TemplateResponse("error.html", {"request": request, "error": "Item not found"}, status_code=404)
+        db.delete(item)
+        db.commit()
+        print(f"Item deleted: {item}")  # Debug print
+        return RedirectResponse(url="/", status_code=303)
+    except SQLAlchemyError as e:
+        print(f"Database error in delete_item: {str(e)}")
+        return templates.TemplateResponse("error.html", {"request": request, "error": "Database error occurred"}, status_code=500)
+    except Exception as e:
+        print(f"Unexpected error in delete_item: {str(e)}")
         return templates.TemplateResponse("error.html", {"request": request, "error": "An unexpected error occurred"}, status_code=500)
 
 if __name__ == "__main__":

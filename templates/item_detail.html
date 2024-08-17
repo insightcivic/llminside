@@ -11,5 +11,8 @@
     <p>ID: {{ item.id }}</p>
     <p>Name: {{ item.name }}</p>
     <a href="/">Back to list</a>
+    <form action="/items/{{ item.id }}/delete" method="post" style="margin-top: 20px;">
+        <button type="submit" class="delete-btn">Delete Item</button>
+    </form>
 </body>
 </html>
