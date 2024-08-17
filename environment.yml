@@ -1,4 +1,4 @@
-name: myproject
+name: llminside
 channels:
   - conda-forge
   - defaults
@@ -11,6 +11,9 @@ dependencies:
   - langchain
   - openai
   - nodejs
+  - jinja2
+  - python-dotenv
+  - psycopg2-binary
   - npm
   - pip
   - pip:
