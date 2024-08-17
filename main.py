@@ -4,6 +4,7 @@ from fastapi import FastAPI, Depends, Request, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
@@ -48,6 +49,9 @@ class Item(Base):
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+# enforce HTTPS
+app.add_middleware(HTTPSRedirectMiddleware)
 
 # Set up Jinja2 templates
 templates = Jinja2Templates(directory="templates")
