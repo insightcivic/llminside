@@ -1,6 +1,11 @@
 fastapi
-   uvicorn
-   sqlalchemy
-   psycopg2-binary
-   python-dotenv
-   jinja2
+uvicorn
+sqlalchemy
+psycopg2
+langchain
+openai
+jinja2
+python-dotenv
+psycopg2-binary
+pgvector
+
