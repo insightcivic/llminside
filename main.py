@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.exc import SQLAlchemyError
 
 # Load environment variables
 load_dotenv()
@@ -47,6 +48,7 @@ def get_db():
 @app.get("/")
 async def root(request: Request, db: Session = Depends(get_db)):
     items = db.query(Item).all()
+    print(f"Items retrieved: {items}")  # Debug print
     return templates.TemplateResponse("index.html", {"request": request, "items": items})
 
 @app.post("/items/")
@@ -60,7 +62,14 @@ async def create_item(request: Request, name: str = Form(...), db: Session = Dep
 
 @app.get("/items/{item_id}")
 async def read_item(request: Request, item_id: int, db: Session = Depends(get_db)):
-    item = db.query(Item).filter(Item.id == item_id).first()
-    if item is None:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return templates.TemplateResponse("item_detail.html", {"request": request, "item": item})
+    try:
+        item = db.query(Item).filter(Item.id == item_id).first()
+        if item is None:
+            return templates.TemplateResponse("error.html", {"request": request, "error": "Item not found"}, status_code=404)
+        return templates.TemplateResponse("item_detail.html", {"request": request, "item": item})
+    except SQLAlchemyError as e:
+        print(f"Database error: {str(e)}")
+        return templates.TemplateResponse("error.html", {"request": request, "error": "Database error occurred"}, status_code=500)
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        return templates.TemplateResponse("error.html", {"request": request, "error": "An unexpected error occurred"}, status_code=500)
